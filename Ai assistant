@@ -1,0 +1,30 @@
+export default async function handler(req, res) {
+  const { messages } = req.body;
+
+  const systemPrompt = {
+    role: "system",
+    content: "You are a powerful AI assistant for Steve Have It brand. Help generate, fix, and manage frontend/backend code, Supabase, Vercel, GitLab, payments, CMS, and admin logic. Return only helpful answers in markdown or text."
+  };
+
+  const fullMessages = [systemPrompt, ...messages];
+
+  try {
+    const reply = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4',
+        messages: fullMessages,
+      }),
+    });
+
+    const data = await reply.json();
+    res.status(200).json({ reply: data.choices[0].message.content });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ reply: '⚠️ Error connecting to OpenAI.' });
+  }
+}
